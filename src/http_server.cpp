@@ -5,8 +5,10 @@ namespace async_web_server_cpp
 {
 
 HttpServer::HttpServer(const std::string &address, const std::string &port,
-                       HttpServerRequestHandler request_handler, std::size_t thread_pool_size)
-  : acceptor_(io_service_), thread_pool_size_(thread_pool_size), request_handler_(request_handler)
+                       HttpServerRequestHandler request_handler, std::size_t thread_pool_size,
+                       int tos)
+  : acceptor_(io_service_), thread_pool_size_(thread_pool_size), request_handler_(request_handler),
+    tos_(tos)
 {
 
   boost::asio::ip::tcp::resolver resolver(io_service_);
@@ -14,6 +16,7 @@ HttpServer::HttpServer(const std::string &address, const std::string &port,
   boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(query);
   acceptor_.open(endpoint.protocol());
   acceptor_.set_option(boost::asio::ip::tcp::acceptor::reuse_address(true));
+  acceptor_.set_option(boost::asio::detail::socket_option::integer<IPPROTO_IP, IP_TOS>(tos_));
   acceptor_.bind(endpoint);
   acceptor_.listen();
 }
